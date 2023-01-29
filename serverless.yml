@@ -1,0 +1,37 @@
+service: stability-ai-go
+frameworkVersion: '3'
+useDotenv: true
+
+provider:
+  name: aws
+  region: ap-northeast-2
+  architecture: x86_64
+  runtime: go1.x
+  memorySize: 256
+  timeout: 45
+  iam:
+    role:
+      managedPolicies:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+  environment:
+    GO_ENV: production
+    STABILITY_KEY: ${env:STABILITY_KEY}
+    S3_BUCKET: ${env:S3_BUCKET}
+    CLOUDFRONT_HOST: ${env:CLOUDFRONT_HOST}
+    DYNAMODB_TABLE: ${env:DYNAMODB_TABLE}
+    DYNAMODB_REGION: ${env:DYNAMODB_REGION}
+  tags:
+    Service: stability_ai
+    Stage: ${sls:stage}
+
+package:
+  patterns:
+    - '!**'
+    - 'bin/**'
+
+functions:
+  app:
+    name: ${sls:stage}-stability-ai-go
+    handler: bin/app
+    url: true
