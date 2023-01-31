@@ -24,6 +24,7 @@ func (gi *GenerateInput) Preprocessing() {
 	}
 }
 
+// ToStabilityApiPayload Stability AI API 의 request body 형식으로 변경
 func (gi *GenerateInput) ToStabilityApiPayload() *StabilityApiPayload {
 	var textPrompts []*TextPrompt
 	textPrompts = append(textPrompts, &TextPrompt{
@@ -58,6 +59,7 @@ type TextPrompt struct {
 	Weight int    `json:"weight" default:"1"`
 }
 
+// EnginesResponse Stability AI API - Engine list response
 type EnginesResponse struct {
 	Engines []struct {
 		Description string `json:"description"`
@@ -67,7 +69,7 @@ type EnginesResponse struct {
 	} `json:"engines"`
 }
 
-// StabilityApiResponse Stability AI API - 에러 reponse
+// StabilityApiResponse Stability AI API - 에러 response
 type StabilityApiResponse struct {
 	Name      string `json:"name"`
 	Id        string `json:"id"`

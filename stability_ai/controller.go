@@ -78,7 +78,7 @@ func FindImageByIdCtrl(c *gin.Context) {
 // @Failure 500 {object} BaseErrorResponse
 // @Router /v1/image [get]
 func FindImageManyCtrl(c *gin.Context) {
-	var result []*Image
+	var result Images
 	var err error
 
 	keyword := c.Query("keyword")

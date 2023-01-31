@@ -47,7 +47,7 @@ func SaveImage(imageBytes []byte, request *StabilityApiPayload) (*Image, error) 
 }
 
 func FindImageById(id string) (*Image, error) {
-	var images []*Image
+	var images Images
 
 	err := table.Scan().
 		Filter("'ImageID' = ?", id).
@@ -61,7 +61,7 @@ func FindImageById(id string) (*Image, error) {
 		return nil, nil
 	}
 
-	images[0].SetUrlPrefix()
+	images.SetUrlPrefix()
 	return images[0], nil
 }
 
@@ -69,8 +69,8 @@ type FindManyInput struct {
 	Keyword string
 }
 
-func FindImageMany(input *FindManyInput) ([]*Image, error) {
-	var images []*Image
+func FindImageMany(input *FindManyInput) (Images, error) {
+	var images Images
 	var err error
 
 	if len(strings.TrimSpace(input.Keyword)) > 0 {
@@ -85,10 +85,8 @@ func FindImageMany(input *FindManyInput) ([]*Image, error) {
 		return nil, err
 	}
 
-	for _, image := range images {
-		image.SetUrlPrefix()
-	}
-
+	images.SetUrlPrefix()
+	images.SortTimeDesc()
 	return images, nil
 }
 

@@ -2,6 +2,7 @@ package stability_ai
 
 import (
 	"github.com/google/uuid"
+	"sort"
 	"strings"
 	"time"
 )
@@ -27,4 +28,20 @@ func (i *Image) SetKeywords() {
 // SetUrlPrefix S3 키 값에 접근 가능한 도메인을 추가
 func (i *Image) SetUrlPrefix() {
 	i.Url = strings.Join([]string{cloudfrontHost, i.Url}, "")
+}
+
+type Images []*Image
+
+// SortTimeDesc Image 의 Time 으로 내림차순 정렬
+func (is Images) SortTimeDesc() {
+	sort.Slice(is, func(i, j int) bool {
+		return is[i].Time.After(is[j].Time)
+	})
+}
+
+// SetUrlPrefix S3 키 값에 접근 가능한 도메인을 추가
+func (is Images) SetUrlPrefix() {
+	for _, image := range is {
+		image.Url = strings.Join([]string{cloudfrontHost, image.Url}, "")
+	}
 }

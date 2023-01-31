@@ -33,6 +33,7 @@ func TestDynamoGet(t *testing.T) {
 	err = table.Scan().All(&images)
 	assert.NoError(t, err)
 
+	pp.Println("Fist:", images[0])
 	pp.Println("Size:", len(images))
 }
 
