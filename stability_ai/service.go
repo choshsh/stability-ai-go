@@ -14,65 +14,68 @@ import (
 )
 
 // GenerateImage n개의 이미지 생성 (Concurrency)
-func GenerateImage(engineId string, generateInput *GenerateInput) ([]*Image, error) {
+func GenerateImage(engineId string, generateInput *GenerateInput) (Images, error) {
 	reqUrl := ApiHost + "/v1alpha/generation/" + engineId + "/text-to-image"
-
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
+	var images Images
 
 	wg := sync.WaitGroup{}
 	mutex := sync.Mutex{}
 
-	var images []*Image
+	done := make(chan struct{})
+	errCh := make(chan error)
 
 	for i := 0; i < generateInput.Samples; i++ {
 		wg.Add(1)
+		stabilityApiPayload := generateInput.ToStabilityApiPayload()
+		stabilityApiPayload.Samples = 1
 
-		go func(ctx context.Context, wg *sync.WaitGroup) {
-			done := make(chan struct{})
+		go func() {
+			defer wg.Done()
 
-			stabilityApiPayload := generateInput.ToStabilityApiPayload()
-			stabilityApiPayload.Samples = 1
+			resp, err := client.R().
+				SetHeader("Accept", "image/png").
+				SetHeader("Authorization", apiKey).
+				SetBody(stabilityApiPayload).
+				Post(reqUrl)
 
-			go func() {
-				resp, err := client.R().
-					SetHeader("Accept", "image/png").
-					SetHeader("Authorization", apiKey).
-					SetBody(stabilityApiPayload).
-					Post(reqUrl)
-
-				if err != nil {
-					log.Error().Caller().Err(err).Msg("")
-				}
-
-				if resp.StatusCode() != http.StatusOK {
-					log.Error().Caller().Msg(string(resp.Body()))
-				}
-
-				save, _ := SaveImage(resp.Body(), stabilityApiPayload)
-				mutex.Lock()
-				images = append(images, save)
-				mutex.Unlock()
-
-				done <- struct{}{}
-			}()
-
-			select {
-			case <-done:
-				log.Info().
-					Str("Prompt", stabilityApiPayload.TextPrompts[0].Text).
-					Str("Url", images[len(images)-1].Url).
-					Msgf("%d번째 이미지 생성 완료", len(images))
-			case <-ctx.Done():
-				log.Error().Caller().Msg(ctx.Err().Error())
+			if err != nil {
+				errCh <- err
+				return
 			}
-			wg.Done()
-		}(ctx, &wg)
+
+			if resp.StatusCode() != http.StatusOK {
+				errCh <- errors.New(string(resp.Body()))
+				return
+			}
+
+			save, _ := SaveImage(resp.Body(), stabilityApiPayload)
+
+			mutex.Lock()
+			images = append(images, save)
+			mutex.Unlock()
+
+			done <- struct{}{}
+		}()
 	}
 
-	wg.Wait()
-	if ctx.Err() != nil {
-		return nil, ctx.Err()
+	go func() {
+		wg.Wait()
+		close(done)
+		close(errCh)
+	}()
+
+	for i := 0; i < generateInput.Samples; i++ {
+		select {
+		case <-done:
+			log.Info().
+				Str("Prompt", generateInput.TextPrompt).
+				Str("Url", images[len(images)-1].Url).
+				Msgf("%d번째 이미지 생성 완료", len(images))
+		case err := <-errCh:
+			log.Error().Caller().Msg(err.Error())
+		case <-time.After(60 * time.Second):
+			log.Error().Caller().Msg("이미지 생성 에러 [timeout 60s]")
+		}
 	}
 
 	return images, nil
