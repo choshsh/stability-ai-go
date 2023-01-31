@@ -34,4 +34,12 @@ functions:
   app:
     name: ${sls:stage}-stability-ai-go
     handler: bin/app
-    url: true
+    url:
+      cors:
+        allowedOrigins:
+          - '*'
+        allowedHeaders:
+          - '*'
+        allowedMethods:
+          - '*'
+        allowCredentials: true
