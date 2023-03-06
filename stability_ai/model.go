@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+const (
+	ModelImagePK           = "ImageID"
+	ModelImagePutCondition = "attribute_not_exists(" + ModelImagePK + ")"
+)
+
 type Image struct {
 	ImageID     uuid.UUID            `dynamo:",hash" index:"Seq-ID-index,hash" json:"imageID"` // 이미지 고유 ID
 	Time        time.Time            `dynamo:",range" json:"time"`
@@ -15,33 +20,41 @@ type Image struct {
 	RequestInfo *StabilityApiPayload `json:"requestInfo"` // 이미지 생성 요청값
 }
 
-// SetKeywords 프롬프트에서 키워드 추출
-func (i *Image) SetKeywords() {
+// SetKeywords Extract keywords from prompts
+func (i *Image) SetKeywords() *Image {
 	if i.RequestInfo != nil {
 		split := strings.Split(i.RequestInfo.TextPrompts[0].Text, ",")
 		for _, s := range split {
 			i.Keywords = append(i.Keywords, strings.TrimSpace(s))
 		}
 	}
+
+	return i
 }
 
-// SetUrlPrefix S3 키 값에 접근 가능한 도메인을 추가
-func (i *Image) SetUrlPrefix() {
+// SetUrlPrefix Add accessible domain to S3 key values
+func (i *Image) SetUrlPrefix() *Image {
 	i.Url = strings.Join([]string{cloudfrontHost, i.Url}, "")
+
+	return i
 }
 
 type Images []*Image
 
-// SortTimeDesc Image 의 Time 으로 내림차순 정렬
-func (is Images) SortTimeDesc() {
+// SortTimeDesc Sort Descending by Time
+func (is Images) SortTimeDesc() Images {
 	sort.Slice(is, func(i, j int) bool {
 		return is[i].Time.After(is[j].Time)
 	})
+
+	return is
 }
 
-// SetUrlPrefix S3 키 값에 접근 가능한 도메인을 추가
-func (is Images) SetUrlPrefix() {
+// SetUrlPrefix Add accessible domain to S3 key values
+func (is Images) SetUrlPrefix() Images {
 	for _, image := range is {
 		image.Url = strings.Join([]string{cloudfrontHost, image.Url}, "")
 	}
+
+	return is
 }

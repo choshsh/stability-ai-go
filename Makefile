@@ -3,7 +3,7 @@ export BIN_DIR=bin
 
 .PHONY: build
 build: clean docs
-	GOOS=linux GOARCH=amd64 go build \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 		-tags lambda.norpc -ldflags '-s -w' \
 		-o ${BIN_DIR}/${APP_NAME} main.go
 
@@ -11,9 +11,9 @@ build: clean docs
 serve: docs
 	cd cmd && go run main.go
 
-.PHONY: deploy-verify
+.PHONY: deploy-dev
 deploy-dev: build
-	sls deploy -f app -s dev
+	sls deploy function -f app -s dev
 
 .PHONY: clean
 clean:

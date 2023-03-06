@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"stability-ai-go/db"
 	"stability-ai-go/docs"
 	"stability-ai-go/middleware"
 	"stability-ai-go/stability_ai"
@@ -17,6 +18,8 @@ var ginLambda *ginadapter.GinLambdaV2
 
 func init() {
 	r := gin.Default()
+
+	db.Init()
 
 	// Middleware
 	r.Use(middleware.SetHeader)

@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"github.com/k0kubun/pp/v3"
 	"github.com/stretchr/testify/assert"
+	"stability-ai-go/db"
 	"testing"
 )
 
 func TestGenerateSingle(t *testing.T) {
+	db.Init("local")
+
 	prompts := `cat`
 
 	input := GenerateInput{
@@ -25,6 +28,8 @@ func TestGenerateSingle(t *testing.T) {
 }
 
 func TestEngines(t *testing.T) {
+	db.Init("local")
+
 	result, err := Engines()
 	fmt.Printf("Total count: %d\n\n", len(result.Engines))
 	for _, engine := range result.Engines {
@@ -34,6 +39,8 @@ func TestEngines(t *testing.T) {
 }
 
 func TestBalance(t *testing.T) {
+	db.Init("local")
+
 	result, err := Balance()
 
 	fmt.Printf("Credit: %f\n\n", result.Credits)

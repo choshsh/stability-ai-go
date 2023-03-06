@@ -6,12 +6,12 @@ import (
 )
 
 // GenerateImageCtrl
-// @Summary 이미지 생성하기
+// @Summary Generate image
 // @Tags image
 // @Accept json
 // @Produce json
-// @Param engineId path string true "엔진 ID" Enums(stable-diffusion-512-v2-1, stable-diffusion-512-v2-0, stable-diffusion-v1-5)
-// @Param GenerateInput body GenerateInput true "상세는 아래 Model 클릭해서 정보 확인"
+// @Param engineId path string true "Engine ID" Enums(stable-diffusion-512-v2-1, stable-diffusion-512-v2-0, stable-diffusion-v1-5)
+// @Param GenerateInput body GenerateInput true "Click on a model below for more information"
 // @Success 200 {array} Image
 // @Failure 400 {object} BaseErrorResponse
 // @Failure 500 {object} BaseErrorResponse
@@ -29,7 +29,7 @@ func GenerateImageCtrl(c *gin.Context) {
 	done := make(chan struct{})
 	go calcCredit(c, done, generateInput.ToStabilityApiPayload())
 
-	// 이미지 생성
+	// Generate Image
 	result, err := GenerateImage(engineId, &generateInput)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, NewBaseErrorResponse(err.Error()))
@@ -41,11 +41,11 @@ func GenerateImageCtrl(c *gin.Context) {
 }
 
 // FindImageByIdCtrl
-// @Summary ID로 이미지 조회
+// @Summary Find images by ID
 // @Tags image
 // @Accept json
 // @Produce json
-// @Param id path string true "image의 uuid"
+// @Param id path string true "uuid of the image"
 // @Success 200 {object} Image
 // @Failure 404 {object} BaseErrorResponse
 // @Failure 500 {object} BaseErrorResponse
@@ -58,7 +58,6 @@ func FindImageByIdCtrl(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, NewBaseErrorResponse(err.Error()))
 		return
 	}
-
 	if result == nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, NewBaseErrorResponse("item does not exist"))
 		return
@@ -68,11 +67,11 @@ func FindImageByIdCtrl(c *gin.Context) {
 }
 
 // FindImageManyCtrl
-// @Summary 이미지 리스트 조회
+// @Summary Get a list of images
 // @Tags image
 // @Accept json
 // @Produce json
-// @Param keyword query string false "(Optional) keyword로 조건 검색"
+// @Param keyword query string false "(Optional) Search for conditions by keyword"
 // @Success 200 {array} Image
 // @Failure 404 {object} BaseErrorResponse
 // @Failure 500 {object} BaseErrorResponse
@@ -82,13 +81,12 @@ func FindImageManyCtrl(c *gin.Context) {
 	var err error
 
 	keyword := c.Query("keyword")
-	result, err = FindImageMany(&FindManyInput{Keyword: keyword})
 
+	result, err = FindImageMany(&FindManyInput{Keyword: keyword})
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
-
 	if result == nil {
 		c.AbortWithStatusJSON(http.StatusNotFound, NewBaseErrorResponse("item does not exist"))
 		return
@@ -98,17 +96,14 @@ func FindImageManyCtrl(c *gin.Context) {
 }
 
 // BalanceCtrl
-// @Summary stability.ai 잔여 크레딧 조회
+// @Summary Get remaining credit
 // @Tags credit
-// @Accept json
 // @Produce json
 // @Success 200 {object} BalanceResponse
-// @Failure 400 {object} BaseErrorResponse
 // @Failure 500 {object} BaseErrorResponse
 // @Router /v1/balance [get]
 func BalanceCtrl(c *gin.Context) {
 	result, err := Balance()
-
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return

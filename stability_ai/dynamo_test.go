@@ -1,36 +1,26 @@
 package stability_ai
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/guregu/dynamo"
 	"github.com/k0kubun/pp/v3"
 	"github.com/stretchr/testify/assert"
+	"stability-ai-go/db"
 	"testing"
 )
 
 func TestDynamo(t *testing.T) {
-	sess, err := session.NewSessionWithOptions(session.Options{Profile: "verify"})
-	assert.NoError(t, err)
-	db := dynamo.New(sess, &aws.Config{Region: aws.String("ap-northeast-2")})
+	db.Init()
 
-	err = db.CreateTable("stability-ai", &Image{}).
-		OnDemand(true).
-		Run()
-
+	err := InitTable()
 	assert.NoError(t, err)
 }
 
 func TestDynamoGet(t *testing.T) {
-	sess, err := session.NewSessionWithOptions(session.Options{Profile: "verify"})
-	assert.NoError(t, err)
-	db := dynamo.New(sess, &aws.Config{Region: aws.String("ap-northeast-2")})
-
-	table = db.Table("stability-ai")
+	db.Init()
+	table := db.DB().Table(tableName)
 
 	var images []Image
 
-	err = table.Scan().All(&images)
+	err := table.Scan().All(&images)
 	assert.NoError(t, err)
 
 	pp.Println("Fist:", images[0])
@@ -38,11 +28,8 @@ func TestDynamoGet(t *testing.T) {
 }
 
 func TestDeleteAll(t *testing.T) {
-	sess, err := session.NewSessionWithOptions(session.Options{Profile: "verify"})
-	assert.NoError(t, err)
-	db := dynamo.New(sess, &aws.Config{Region: aws.String("ap-northeast-2")})
-
-	table = db.Table("stability-ai")
+	db.Init()
+	table := db.DB().Table(tableName)
 
 	images, err := FindImageMany(nil)
 	assert.NoError(t, err)
@@ -57,5 +44,4 @@ func TestDeleteAll(t *testing.T) {
 	images, err = FindImageMany(nil)
 	assert.NoError(t, err)
 	assert.Equal(t, len(images), 0)
-
 }
